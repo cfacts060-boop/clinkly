@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clinkly</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- PDF.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#000;
+      --white:#fff;
+      --muted:#9aa7b2;
+      --yellow:#FFD700;
+      --card-bg: rgba(255,255,255,0.05);
+    }
+
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--white);
+      font-family:Arial;
+    }
+
+    .wrap{
+      max-width:900px;
+      margin:auto;
+      padding:30px;
+      text-align:center;
+    }
+
+    /* PAGE 1 */
+    #page1{ margin-top:80px; }
+
+    #page1 h1{
+      font-size:48px;
+      margin-bottom:40px;
+    }
+
+    .input-wrap{
+      position:relative;
+      display:inline-block;
+    }
+
+    #codeInput{
+      width:300px;
+      padding:12px 40px 12px 16px;
+      background:transparent;
+      border:1px solid #333;
+      border-radius:10px;
+      color:white;
+      font-size:18px;
+      outline:none;
+    }
+
+    .eye-btn{
+      position:absolute;
+      right:10px;
+      top:50%;
+      transform:translateY(-50%);
+      background:transparent;
+      border:none;
+      cursor:pointer;
+    }
+
+    .eye-btn svg{
+      width:22px;
+      height:22px;
+      fill:white;
+      opacity:0.9;
+    }
+
+    .bat-btn{
+      margin-top:25px;
+      font-size:20px;
+      font-weight:bold;
+      background:transparent;
+      color:white;
+      border:none;
+      cursor:pointer;
+    }
+
+    /* PAGE 2 */
+    #page2{ display:none; margin-top:20px; text-align:left; }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:20px;
+    }
+
+    .btn{
+      background:transparent;
+      border:1px solid #444;
+      padding:8px 14px;
+      border-radius:8px;
+      color:white;
+      cursor:pointer;
+    }
+
+    .back-btn{
+      border:1px solid #444;
+      padding:8px 14px;
+      color:white;
+      background:transparent;
+      border-radius:8px;
+      cursor:pointer;
+    }
+
+    #codeLabelWrap{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:18px;
+      color:var(--yellow);
+      margin-bottom:20px;
+    }
+
+    .files-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+      gap:16px;
+    }
+
+    .file-card{
+      background:var(--card-bg);
+      border-radius:10px;
+      padding:10px;
+    }
+
+    .preview{
+      height:100px;
+      background:#111;
+      border-radius:8px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+
+    .preview img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .file-name{
+      margin-top:8px;
+      font-size:14px;
+      color:white;
+    }
+
+    .file-actions{
+      margin-top:6px;
+      display:flex;
+      justify-content:space-between;
+      font-size:12px;
+    }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.85);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:10;
+    }
+
+    .editor-box{
+      width:85%;
+      max-width:700px;
+      background:#071018;
+      padding:20px;
+      border-radius:12px;
+      border:1px solid #222;
+    }
+
+    textarea{
+      width:100%;
+      height:280px;
+      background:transparent;
+      border:1px solid #222;
+      color:white;
+      border-radius:8px;
+      padding:10px;
+      font-family:monospace;
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+
+<!-- PAGE 1 -->
+<div id="page1">
+  <h1>Clinkly</h1>
+
+  <div class="input-wrap">
+    <input id="codeInput" type="password" placeholder="Enter code">
+    <button class="eye-btn" onclick="toggleEye()">
+      <svg viewBox="0 0 24 24"><path d="M12 5c-5 0-9.27 3.11-11 7 1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/><circle cx="12" cy="12" r="2.5"/></svg>
+    </button>
+  </div>
+
+  <div>
+    <button class="bat-btn" onclick="enterCode()">I'm Batman</button>
+  </div>
+</div>
+
+<!-- PAGE 2 -->
+<div id="page2">
+
+  <div class="topbar">
+    <div>
+      <button class="btn" onclick="triggerUpload()">Upload</button>
+      <button class="btn" id="deleteBtn" onclick="prepareDelete()">Delete</button>
+      <button class="btn" onclick="openEditor()">Share Code</button>
+    </div>
+    <button class="back-btn" onclick="goBack()">← Back</button>
+  </div>
+
+  <div id="codeLabelWrap">
+    <div id="codeLabel">Code: -</div>
+    <button class="eye-btn" onclick="toggleCodeName()">
+      <svg viewBox="0 0 24 24"><path d="M12 5c-5 0-9.27 3.11-11 7 1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/><circle cx="12" cy="12" r="2.5"/></svg>
+    </button>
+  </div>
+
+  <div class="files-grid" id="filesWrap"></div>
+</div>
+
+</div>
+
+<!-- EDITOR -->
+<div class="overlay" id="overlay">
+  <div class="editor-box">
+    <textarea id="codeInputArea" placeholder="// paste here"></textarea>
+    <div style="display:flex;justify-content:space-between;margin-top:10px;">
+      <input id="filenameInput" placeholder="filename.txt" style="width:200px;padding:10px;border-radius:8px;border:1px solid #222;background:transparent;color:white;">
+      <div>
+        <button class="btn" onclick="closeEditor()">Cancel</button>
+        <button class="btn" onclick="savePastedCode()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* CONFIG */
+const SUPABASE_URL = "https://ajatxhuijtvwdkrmklwn.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqYXR4aHVpanR2d2Rrcm1rbHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0MTc3MDksImV4cCI6MjA3OTk5MzcwOX0.EsKC8PuxxgtqWljbZOSBJDd22ScPOuO3pb7HTDo6_xc";
+const BUCKET = "clinkly-files";
+
+const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+/* STATE */
+let currentCode = "";
+let deleteMode = false;
+let codeHidden = false;
+
+/* PAGE 1 EYE */
+function toggleEye() {
+  const i = document.getElementById("codeInput");
+  i.type = i.type === "password" ? "text" : "password";
+}
+
+/* ENTER CODE — with minimum 4 characters */
+function enterCode() {
+  const code = document.getElementById("codeInput").value.trim();
+
+  if (code.length < 4) {
+    alert("Code must be at least 4 characters.");
+    return;
+  }
+
+  currentCode = code;
+
+  document.getElementById("page1").style.display = "none";
+  document.getElementById("page2").style.display = "block";
+
+  document.getElementById("codeLabel").textContent = "Code: " + currentCode;
+
+  listFiles();
+}
+
+/* BACK */
+function goBack() {
+  deleteMode = false;
+  document.getElementById("deleteBtn").textContent = "Delete";
+
+  document.getElementById("page2").style.display = "none";
+  document.getElementById("page1").style.display = "block";
+}
+
+/* HIDE / SHOW CODE NAME */
+function toggleCodeName() {
+  codeHidden = !codeHidden;
+  document.getElementById("codeLabel").textContent =
+    codeHidden ? "Code: ••••••" : "Code: " + currentCode;
+}
+
+/* LIST FILES */
+async function listFiles() {
+  const wrap = document.getElementById("filesWrap");
+  wrap.innerHTML = "<div>Loading...</div>";
+
+  const folder = `codes/${currentCode}`;
+
+  const { data } = await supa.storage.from(BUCKET).list(folder);
+
+  wrap.innerHTML = "";
+
+  if (!data || data.length === 0) {
+    wrap.innerHTML = "<div style='color:#888;'>No files</div>";
+    return;
+  }
+
+  for (let f of data) {
+    const full = `${folder}/${f.name}`;
+    const url = supa.storage.from(BUCKET).getPublicUrl(full).data.publicUrl;
+
+    const card = document.createElement("div");
+    card.className = "file-card";
+
+    const preview = document.createElement("div");
+    preview.className = "preview";
+    preview.innerHTML = "<div style='color:#666;'>Preview</div>";
+
+    card.appendChild(preview);
+
+    const ext = f.name.split(".").pop().toLowerCase();
+
+    /* IMAGE PREVIEW */
+    if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
+      const img = new Image();
+      img.src = url;
+      img.onload = () => (preview.innerHTML = "", preview.appendChild(img));
+    }
+
+    /* PDF PREVIEW */
+    else if (ext === "pdf") {
+      try {
+        const resp = await fetch(url);
+        const buf = await resp.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+        const page = await pdf.getPage(1);
+        const canvas = document.createElement("canvas");
+        preview.innerHTML = "";
+        preview.appendChild(canvas);
+        await page.render({ canvasContext: canvas.getContext("2d"), viewport: page.getViewport({ scale: 0.4 }) }).promise;
+      } catch {
+        preview.innerHTML = "<div style='color:#888;'>PDF</div>";
+      }
+    }
+
+    const name = document.createElement("div");
+    name.className = "file-name";
+    name.textContent = f.name;
+
+    const actions = `
+      <div class="file-actions">
+        <a href="${url}" target="_blank" style="color:var(--yellow);text-decoration:none;">Open / Download</a>
+        <input type="checkbox" class="file-check" data-path="${full}">
+      </div>
+    `;
+
+    card.appendChild(name);
+    card.insertAdjacentHTML("beforeend", actions);
+
+    wrap.appendChild(card);
+  }
+}
+
+/* UPLOAD */
+function triggerUpload() {
+  const picker = document.createElement("input");
+  picker.type = "file";
+
+  picker.onchange = async e => {
+    const file = e.target.files[0];
+    const path = `codes/${currentCode}/${file.name}`;
+    await supa.storage.from(BUCKET).upload(path, file, { upsert: true });
+    listFiles();
+  };
+
+  picker.click();
+}
+
+/* DELETE */
+function prepareDelete() {
+  if (!deleteMode) {
+    deleteMode = true;
+    document.getElementById("deleteBtn").textContent = "Confirm Delete";
+    alert("Select files then click Confirm Delete.");
+    return;
+  }
+
+  confirmDelete();
+}
+
+async function confirmDelete() {
+  const checks = [...document.querySelectorAll(".file-check:checked")];
+  if (checks.length === 0) {
+    alert("No files selected");
+    deleteMode = false;
+    document.getElementById("deleteBtn").textContent = "Delete";
+    return;
+  }
+
+  const paths = checks.map(c => c.dataset.path);
+
+  await supa.storage.from(BUCKET).remove(paths);
+
+  deleteMode = false;
+  document.getElementById("deleteBtn").textContent = "Delete";
+
+  listFiles();
+}
+
+/* EDITOR */
+function openEditor() {
+  document.getElementById("overlay").style.display = "flex";
+}
+
+function closeEditor() {
+  document.getElementById("overlay").style.display = "none";
+}
+
+async function savePastedCode() {
+  const txt = document.getElementById("codeInputArea").value;
+  let fname = document.getElementById("filenameInput").value;
+
+  if (!fname) fname = "code.txt";
+
+  const blob = new Blob([txt], { type:"text/plain" });
+
+  const path = `codes/${currentCode}/${fname}`;
+
+  await supa.storage.from(BUCKET).upload(path, blob, { upsert:true });
+
+  closeEditor();
+  listFiles();
+}
+</script>
+</body>
+</html>
