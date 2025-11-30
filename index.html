@@ -361,43 +361,6 @@
           </div>
         </div>
 
-<!-- PAGE 0 (Login / Register) -->
-<div id="page0" style="text-align:center; padding-top:60px;">
-
-  <h1 style="font-size:42px; margin-bottom:30px; color:#FFD700;">
-    Clinkly
-  </h1>
-
-  <div style="max-width:260px; margin:0 auto;">
-
-    <input id="loginUser"
-      placeholder="Username"
-      style="width:100%; padding:10px; border-radius:8px; border:1px solid #333; background:transparent; color:white; margin-bottom:12px; font-size:14px;"
-    >
-
-    <input id="loginPass"
-      type="password"
-      placeholder="Password"
-      style="width:100%; padding:10px; border-radius:8px; border:1px solid #333; background:transparent; color:white; margin-bottom:12px; font-size:14px;"
-    >
-
-    <button onclick="loginUser()"
-      style="width:100%; padding:10px; background:#FFD700; color:black; border:none; border-radius:8px; font-weight:bold; margin-bottom:10px; cursor:pointer;">
-      Login
-    </button>
-
-    <button onclick="registerUser()"
-      style="width:100%; padding:10px; background:transparent; border:1px solid #FFD700; color:#FFD700; border-radius:8px; cursor:pointer;">
-      Register
-    </button>
-
-    <div id="authMsg" style="color:#ff6666; margin-top:12px; font-size:14px;"></div>
-
-  </div>
-
-</div>
-
-
         <!-- PAGE 1 -->
         <div id="page1" style="display:none;">
           <h1>Clinkly</h1>
@@ -451,19 +414,6 @@
   </div>
 
 <script>
-
-// Show Page0 on start
-document.getElementById('page0').style.display = 'block';
-document.getElementById('page1').style.display = 'none';
-document.getElementById('page2').style.display = 'none';
-document.getElementById('chatCol').classList.add('hidden');
-
-// Autofill username if saved
-const savedUser = localStorage.getItem('clinkly_user');
-if(savedUser){
-  document.getElementById('loginUser').value = savedUser;
-}
-
 /* ----------------- CONFIG ----------------- */
 const SUPABASE_URL = "https://ajatxhuijtvwdkrmklwn.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqYXR4aHVpanR2d2Rrcm1rbHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0MTc3MDksImV4cCI6MjA3OTk5MzcwOX0.EsKC8PuxxgtqWljbZOSBJDd22ScPOuO3pb7HTDo6_xc";
@@ -532,103 +482,86 @@ function removeMessageFromStorage(code, msg){
   }
 }
 
-/* ---------------- AUTH (Register / Login) ---------------- */
+/* ---------------- AUTH (NEW: Register / Login) ---------------- */
 
-// Show auth messages
-function showAuthMsg(txt, color = '#f66') {
-  const el = document.getElementById('authMsg');
-  if (!el) return;
+// helper to show auth message (error or success)
+function setAuthMessage(txt, color='#f66'){
+  const el = document.getElementById('authMessage');
   el.style.color = color;
   el.textContent = txt;
 }
 
-// REGISTER USER
-async function registerUser() {
-  const u = (document.getElementById('loginUser').value || '').trim();
-  const p = (document.getElementById('loginPass').value || '').trim();
+// Register new user (plain text password as requested)
+async function registerUser(){
+  const u = (document.getElementById('regUsername').value || '').trim();
+  const p = (document.getElementById('regPassword').value || '').trim();
+  if(!u || !p) { setAuthMessage('Enter username and password'); return; }
 
-  if (!u || !p) return showAuthMsg("Enter username and password");
-
-  try {
-    // check existing
+  try{
+    // check exists
     const { data: existing, error: selErr } = await supa
       .from('clinkly_users')
       .select('id')
       .eq('username', u)
       .limit(1);
 
-    if (selErr) return showAuthMsg("Error checking username");
-    if (existing && existing.length > 0)
-      return showAuthMsg("Username already taken");
+    if(selErr){ console.error(selErr); setAuthMessage('Error checking username'); return; }
+    if(existing && existing.length > 0){ setAuthMessage('Username already taken'); return; }
 
     // insert
-    const { error } = await supa
+    const { data, error } = await supa
       .from('clinkly_users')
       .insert([{ username: u, password: p }]);
 
-    if (error) return showAuthMsg("Registration failed");
+    if(error){ console.error(error); setAuthMessage('Registration failed'); return; }
 
+    // auto-login: save to localStorage and go to page1
     localStorage.setItem('clinkly_user', u);
     chatName = u;
+    setAuthMessage('Registered! Redirecting...', '#6f6');
 
-    showAuthMsg("Registered! Redirecting...", "#6f6");
-
+    // small delay to show message then navigate
     setTimeout(() => {
       goToPage1AfterAuth();
-    }, 600);
+    }, 500);
 
-  } catch (e) {
-    showAuthMsg("Registration error");
+  }catch(e){
+    console.error('registerUser error', e);
+    setAuthMessage('Registration failed');
   }
 }
 
-// LOGIN USER
-async function loginUser() {
-  const u = (document.getElementById('loginUser').value || '').trim();
-  const p = (document.getElementById('loginPass').value || '').trim();
+// Login existing user
+async function loginUser(){
+  const u = (document.getElementById('regUsername').value || '').trim();
+  const p = (document.getElementById('regPassword').value || '').trim();
+  if(!u || !p) { setAuthMessage('Enter username and password'); return; }
 
-  if (!u || !p) return showAuthMsg("Enter username and password");
-
-  try {
+  try{
     const { data, error } = await supa
       .from('clinkly_users')
-      .select('*')
+      .select('id,username,password')
       .eq('username', u)
       .limit(1);
 
-    if (error) return showAuthMsg("Login error");
-    if (!data || data.length === 0)
-      return showAuthMsg("User not found. Please register.");
+    if(error){ console.error(error); setAuthMessage('Login error'); return; }
+    if(!data || data.length === 0){ setAuthMessage('User not found. Please register first.'); return; }
 
     const user = data[0];
-    if (user.password !== p)
-      return showAuthMsg("Incorrect password");
+    if(user.password !== p){ setAuthMessage('Incorrect password'); return; }
 
     // success
     localStorage.setItem('clinkly_user', u);
     chatName = u;
-
-    showAuthMsg("Login successful!", "#6f6");
+    setAuthMessage('Login successful! Redirecting...', '#6f6');
 
     setTimeout(() => {
       goToPage1AfterAuth();
-    }, 600);
+    }, 300);
 
-  } catch (e) {
-    showAuthMsg("Login failed");
-  }
-}
-
-// After login/register → go to Page1
-function goToPage1AfterAuth() {
-  document.getElementById('page0').style.display = 'none';
-  document.getElementById('page1').style.display = 'block';
-
-  const stored = localStorage.getItem('clinkly_user');
-  if (stored) {
-    chatName = stored;
-    const nameInputEl = document.getElementById('nameInput');
-    if (nameInputEl) nameInputEl.value = stored;
+  }catch(e){
+    console.error('loginUser error', e);
+    setAuthMessage('Login failed');
   }
 }
 
