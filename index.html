@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Clinkly</title>
 
-  <!-- Supabase -->
+  <!-- Supabase (v2) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- PDF.js -->
@@ -18,62 +18,174 @@
       --muted:#9aa7b2;
       --yellow:#FFD700;
       --card-bg: rgba(255,255,255,0.05);
+      --chat-width: 300px;
     }
 
-    body{
-      margin:0;
-      background:var(--bg);
+    html,body{height:100%; margin:0; background:var(--bg); color:var(--white); font-family:Arial, Helvetica, sans-serif; }
+
+    /* Layout: left chat column + main content */
+    .app {
+      display:flex;
+      height:100vh;
+      overflow:hidden;
+    }
+
+    /* CHAT (left column) - hidden until page2 */
+    .chat {
+      width:var(--chat-width);
+      min-width:var(--chat-width);
+      background:#050505;
+      border-right:1px solid rgba(255,255,255,0.03);
+      display:flex;
+      flex-direction:column;
+      z-index:20;
+      box-sizing:border-box;
+      padding:12px;
+    }
+
+    .chat.hidden { display:none; }
+
+    .chat-header {
+      font-size:18px;
+      color:var(--yellow);
+      padding-bottom:8px;
+      border-bottom:1px solid rgba(255,255,255,0.03);
+      font-weight:normal;
+    }
+
+    /* Name screen (vertically centered) */
+    .name-screen {
+      flex:1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .name-box {
+      width:100%;
+      text-align:center;
+      padding: 8px 12px;
+    }
+
+    #nameInput {
+      width:85%;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.06);
+      background:transparent;
       color:var(--white);
-      font-family:Arial;
+      outline:none;
+      margin-bottom:12px;
+      font-size:14px;
     }
 
-    .wrap{
-      max-width:900px;
-      margin:auto;
+    /* daddy is home is plain text (no box) */
+    #daddySubmit {
+      display:inline-block;
+      color:var(--yellow);
+      cursor:pointer;
+      font-size:15px;
+      user-select:none;
+      padding:6px 6px;
+      background:transparent;
+    }
+
+    /* Chat content */
+    .chat-body {
+      display:flex;
+      flex-direction:column;
+      height:100%;
+    }
+
+    #messages {
+      flex:1;
+      overflow:auto;
+      padding:12px;
+      box-sizing:border-box;
+    }
+
+    .msg {
+      background:rgba(255,255,255,0.03);
+      padding:8px;
+      margin-bottom:8px;
+      border-radius:8px;
+      font-size:14px;
+    }
+
+    .sys {
+      font-style:italic;
+      opacity:0.9;
+      color:var(--muted);
+      margin-bottom:8px;
+    }
+
+    .message-meta { font-size:12px; color:var(--muted); margin-bottom:6px; display:flex; justify-content:space-between; gap:10px; }
+
+    .chat-input-row {
+      padding:10px;
+      border-top:1px solid rgba(255,255,255,0.03);
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    #chatInput {
+      flex:1;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.06);
+      background:transparent;
+      color:var(--white);
+      outline:none;
+    }
+
+    #sendBtn {
+      padding:10px 12px;
+      border-radius:8px;
+      background:var(--yellow);
+      border:none;
+      color:#000;
+      font-weight:bold;
+      cursor:pointer;
+    }
+
+    /* MAIN CONTENT (right) */
+    .main {
+      flex:1;
+      overflow:auto;
+      box-sizing:border-box;
+    }
+
+    .wrap {
+      max-width:1100px;
+      margin:0 auto;
       padding:30px;
       text-align:center;
+      box-sizing:border-box;
     }
 
-    /* PAGE 1 */
-    #page1{ margin-top:80px; }
+    /* Page1 / Page2 container */
+    #page1, #page2 { min-height:calc(100vh - 0px); }
 
-    #page1 h1{
-      font-size:48px;
-      margin-bottom:40px;
-    }
+    #page1 { padding-top:70px; }
 
-    .input-wrap{
-      position:relative;
-      display:inline-block;
-    }
+    h1 { font-size:48px; margin-bottom:40px; }
+
+    .input-wrap{ position:relative; display:inline-block; }
 
     #codeInput{
-      width:300px;
-      padding:12px 40px 12px 16px;
+      width:360px;
+      padding:12px 44px 12px 16px;
       background:transparent;
       border:1px solid #333;
-      border-radius:10px;
+      border-radius:12px;
       color:white;
       font-size:18px;
       outline:none;
     }
 
-    .eye-btn{
-      position:absolute;
-      right:10px;
-      top:50%;
-      transform:translateY(-50%);
-      background:transparent;
-      border:none;
-      cursor:pointer;
-    }
-
-    .eye-btn svg{
-      width:22px;
-      height:22px;
-      fill:white;
-      opacity:0.9;
-    }
+    .eye-btn{ position:absolute; right:10px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer;}
+    .eye-btn svg { width:22px;height:22px; fill:white; opacity:0.9; }
 
     .bat-btn{
       margin-top:25px;
@@ -85,368 +197,426 @@
       cursor:pointer;
     }
 
-    /* PAGE 2 */
-    #page2{ display:none; margin-top:20px; text-align:left; }
+    /* Page 2 topbar and files - no gap to chat */
+    #page2 .topbar { display:flex; justify-content:space-between; margin-bottom:20px; align-items:center; }
+    .btn { background:transparent; border:1px solid #444; padding:8px 14px; border-radius:8px; color:white; cursor:pointer; margin-right:8px; }
+    .back-btn { border:1px solid #444; padding:8px 14px; color:white; background:transparent; border-radius:8px; cursor:pointer; }
 
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      margin-bottom:20px;
-    }
+    #codeLabel { color:var(--yellow); font-size:18px; text-align:left; }
 
-    .btn{
-      background:transparent;
-      border:1px solid #444;
-      padding:8px 14px;
-      border-radius:8px;
-      color:white;
-      cursor:pointer;
-    }
+    .files-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:16px; padding-top:18px; }
 
-    .back-btn{
-      border:1px solid #444;
-      padding:8px 14px;
-      color:white;
-      background:transparent;
-      border-radius:8px;
-      cursor:pointer;
-    }
+    .file-card{ background:var(--card-bg); border-radius:10px; padding:10px; text-align:left; }
 
-    #codeLabelWrap{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      font-size:18px;
-      color:var(--yellow);
-      margin-bottom:20px;
-    }
+    .preview{ height:120px; background:#111; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
 
-    .files-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
-      gap:16px;
-    }
+    .preview img{ width:100%; height:100%; object-fit:cover; }
 
-    .file-card{
-      background:var(--card-bg);
-      border-radius:10px;
-      padding:10px;
-    }
+    .file-name{ margin-top:8px; font-size:14px; color:white; }
 
-    .preview{
-      height:100px;
-      background:#111;
-      border-radius:8px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-    }
+    .file-actions{ margin-top:6px; display:flex; justify-content:space-between; font-size:12px; }
 
-    .preview img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-    }
+    .overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:60; }
+    .editor-box{ width:85%; max-width:700px; background:#071018; padding:20px; border-radius:12px; border:1px solid #222; }
+    textarea{ width:100%; height:280px; background:transparent; border:1px solid #222; color:white; border-radius:8px; padding:10px; font-family:monospace; }
 
-    .file-name{
-      margin-top:8px;
-      font-size:14px;
-      color:white;
-    }
-
-    .file-actions{
-      margin-top:6px;
-      display:flex;
-      justify-content:space-between;
-      font-size:12px;
-    }
-
-    .overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,0.85);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      z-index:10;
-    }
-
-    .editor-box{
-      width:85%;
-      max-width:700px;
-      background:#071018;
-      padding:20px;
-      border-radius:12px;
-      border:1px solid #222;
-    }
-
-    textarea{
-      width:100%;
-      height:280px;
-      background:transparent;
-      border:1px solid #222;
-      color:white;
-      border-radius:8px;
-      padding:10px;
-      font-family:monospace;
+    /* small screens */
+    @media (max-width:900px){
+      .chat { display:none; }
     }
   </style>
 </head>
-
 <body>
-<div class="wrap">
+  <div class="app">
+    <!-- CHAT (left) - hidden initially, only shown after code entry -->
+    <div id="chatCol" class="chat hidden" aria-hidden="true">
+      <div class="chat-header">Chat</div>
 
-<!-- PAGE 1 -->
-<div id="page1">
-  <h1>Clinkly</h1>
+      <!-- name screen (centered vertically) -->
+      <div id="nameScreen" class="name-screen">
+        <div class="name-box">
+          <input id="nameInput" placeholder="Enter your name" maxlength="30" autocomplete="off" />
+          <div id="daddySubmit">daddy is home</div>
+        </div>
+      </div>
 
-  <div class="input-wrap">
-    <input id="codeInput" type="password" placeholder="Enter code">
-    <button class="eye-btn" onclick="toggleEye()">
-      <svg viewBox="0 0 24 24"><path d="M12 5c-5 0-9.27 3.11-11 7 1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/><circle cx="12" cy="12" r="2.5"/></svg>
-    </button>
-  </div>
+      <!-- chat content (hidden until joined) -->
+      <div id="chatContent" class="chat-body" style="display:none;">
+        <div id="messages"></div>
 
-  <div>
-    <button class="bat-btn" onclick="enterCode()">I'm Batman</button>
-  </div>
-</div>
-
-<!-- PAGE 2 -->
-<div id="page2">
-
-  <div class="topbar">
-    <div>
-      <button class="btn" onclick="triggerUpload()">Upload</button>
-      <button class="btn" id="deleteBtn" onclick="prepareDelete()">Delete</button>
-      <button class="btn" onclick="openEditor()">Share Code</button>
+        <div class="chat-input-row">
+          <input id="chatInput" placeholder="Type a message..." autocomplete="off" />
+          <button id="sendBtn">Send</button>
+        </div>
+      </div>
     </div>
-    <button class="back-btn" onclick="goBack()">← Back</button>
-  </div>
 
-  <div id="codeLabelWrap">
-    <div id="codeLabel">Code: -</div>
-    <button class="eye-btn" onclick="toggleCodeName()">
-      <svg viewBox="0 0 24 24"><path d="M12 5c-5 0-9.27 3.11-11 7 1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/><circle cx="12" cy="12" r="2.5"/></svg>
-    </button>
-  </div>
+    <!-- MAIN CONTENT (right) -->
+    <div class="main">
+      <div class="wrap">
 
-  <div class="files-grid" id="filesWrap"></div>
-</div>
+        <!-- PAGE 1 -->
+        <div id="page1">
+          <h1>Clinkly</h1>
 
-</div>
+          <div class="input-wrap">
+            <input id="codeInput" type="password" placeholder="Enter code (min 4 chars)">
+            <button class="eye-btn" onclick="toggleEye()">
+              <svg viewBox="0 0 24 24"><path d="M12 5c-5 0-9.27 3.11-11 7 1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/><circle cx="12" cy="12" r="2.5"/></svg>
+            </button>
+          </div>
 
-<!-- EDITOR -->
-<div class="overlay" id="overlay">
-  <div class="editor-box">
-    <textarea id="codeInputArea" placeholder="// paste here"></textarea>
-    <div style="display:flex;justify-content:space-between;margin-top:10px;">
-      <input id="filenameInput" placeholder="filename.txt" style="width:200px;padding:10px;border-radius:8px;border:1px solid #222;background:transparent;color:white;">
-      <div>
-        <button class="btn" onclick="closeEditor()">Cancel</button>
-        <button class="btn" onclick="savePastedCode()">Save</button>
+          <div>
+            <button class="bat-btn" onclick="enterCode()">I'm Batman</button>
+          </div>
+        </div>
+
+        <!-- PAGE 2 (same file, toggled on) -->
+        <div id="page2" style="display:none; text-align:left;">
+          <div class="topbar">
+            <div>
+              <button class="btn" onclick="triggerUpload()">Upload</button>
+              <button class="btn" id="deleteBtn" onclick="prepareDelete()">Delete</button>
+              <button class="btn" onclick="openEditor()">Share Code</button>
+            </div>
+            <div style="text-align:right;">
+              <button class="back-btn" onclick="goBack()">← Back</button>
+            </div>
+          </div>
+
+          <div id="codeLabel">Code: -</div>
+
+          <div class="files-grid" id="filesWrap"></div>
+        </div>
+
       </div>
     </div>
   </div>
-</div>
+
+  <!-- EDITOR OVERLAY -->
+  <div id="overlay" class="overlay">
+    <div class="editor-box">
+      <textarea id="codeInputArea" placeholder="// paste here"></textarea>
+      <div style="display:flex;justify-content:space-between;margin-top:10px;">
+        <input id="filenameInput" placeholder="filename.txt" style="width:200px;padding:10px;border-radius:8px;border:1px solid #222;background:transparent;color:white;">
+        <div>
+          <button class="btn" onclick="closeEditor()">Cancel</button>
+          <button class="btn" onclick="savePastedCode()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
-/* CONFIG */
+/* ----------------- CONFIG ----------------- */
 const SUPABASE_URL = "https://ajatxhuijtvwdkrmklwn.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqYXR4aHVpanR2d2Rrcm1rbHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0MTc3MDksImV4cCI6MjA3OTk5MzcwOX0.EsKC8PuxxgtqWljbZOSBJDd22ScPOuO3pb7HTDo6_xc";
 const BUCKET = "clinkly-files";
 
 const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
-/* STATE */
+/* -------------- STATE -------------- */
 let currentCode = "";
 let deleteMode = false;
-let codeHidden = false;
+let chatChannel = null;
+let chatName = "";
 
-/* PAGE 1 EYE */
-function toggleEye() {
-  const i = document.getElementById("codeInput");
-  i.type = i.type === "password" ? "text" : "password";
+/* -------------- PAGE 1: minimal validation & move to page2 -------------- */
+function toggleEye(){
+  const i = document.getElementById('codeInput');
+  i.type = i.type === 'password' ? 'text' : 'password';
 }
 
-/* ENTER CODE — with minimum 4 characters */
-function enterCode() {
-  const code = document.getElementById("codeInput").value.trim();
-
-  if (code.length < 4) {
-    alert("Code must be at least 4 characters.");
-    return;
-  }
-
+function enterCode(){
+  const code = (document.getElementById('codeInput').value || '').trim();
+  if(code.length < 4) return alert('Code must be at least 4 characters');
   currentCode = code;
-
-  document.getElementById("page1").style.display = "none";
-  document.getElementById("page2").style.display = "block";
-
-  document.getElementById("codeLabel").textContent = "Code: " + currentCode;
-
+  window.currentCode = code; // allow chat module to read if needed
+  // show chat column and page2
+  document.getElementById('chatCol').classList.remove('hidden');
+  document.getElementById('chatCol').removeAttribute('aria-hidden');
+  document.getElementById('page1').style.display = 'none';
+  document.getElementById('page2').style.display = 'block';
+  document.getElementById('codeLabel').textContent = 'Code: ' + currentCode;
+  // initialize file list and chat subscription (chat init lazy until join)
   listFiles();
+  initChatRoomForCode(currentCode); // subscribe to channel (but we still wait for name to show input area)
 }
 
-/* BACK */
-function goBack() {
-  deleteMode = false;
-  document.getElementById("deleteBtn").textContent = "Delete";
-
-  document.getElementById("page2").style.display = "none";
-  document.getElementById("page1").style.display = "block";
-}
-
-/* HIDE / SHOW CODE NAME */
-function toggleCodeName() {
-  codeHidden = !codeHidden;
-  document.getElementById("codeLabel").textContent =
-    codeHidden ? "Code: ••••••" : "Code: " + currentCode;
-}
-
-/* LIST FILES */
-async function listFiles() {
-  const wrap = document.getElementById("filesWrap");
-  wrap.innerHTML = "<div>Loading...</div>";
-
-  const folder = `codes/${currentCode}`;
-
-  const { data } = await supa.storage.from(BUCKET).list(folder);
-
-  wrap.innerHTML = "";
-
-  if (!data || data.length === 0) {
-    wrap.innerHTML = "<div style='color:#888;'>No files</div>";
-    return;
-  }
-
-  for (let f of data) {
-    const full = `${folder}/${f.name}`;
-    const url = supa.storage.from(BUCKET).getPublicUrl(full).data.publicUrl;
-
-    const card = document.createElement("div");
-    card.className = "file-card";
-
-    const preview = document.createElement("div");
-    preview.className = "preview";
-    preview.innerHTML = "<div style='color:#666;'>Preview</div>";
-
-    card.appendChild(preview);
-
-    const ext = f.name.split(".").pop().toLowerCase();
-
-    /* IMAGE PREVIEW */
-    if (["jpg","jpeg","png","gif","webp"].includes(ext)) {
-      const img = new Image();
-      img.src = url;
-      img.onload = () => (preview.innerHTML = "", preview.appendChild(img));
+/* -------------- PAGE 2 / FILES (Supabase Storage) -------------- */
+async function listFiles(){
+  const wrap = document.getElementById('filesWrap');
+  wrap.innerHTML = '<div style="color:#888">Loading...</div>';
+  try{
+    const folder = `codes/${currentCode}`;
+    const { data, error } = await supa.storage.from(BUCKET).list(folder);
+    if(error) throw error;
+    wrap.innerHTML = '';
+    if(!data || data.length === 0){
+      wrap.innerHTML = '<div style="color:#888;">No files</div>';
+      return;
     }
+    for(let f of data){
+      const full = `${folder}/${f.name}`;
+      const url = supa.storage.from(BUCKET).getPublicUrl(full).data.publicUrl;
+      const card = document.createElement('div');
+      card.className = 'file-card';
+      const preview = document.createElement('div');
+      preview.className = 'preview';
+      preview.innerHTML = '<div style="color:#666;">Preview</div>';
+      card.appendChild(preview);
 
-    /* PDF PREVIEW */
-    else if (ext === "pdf") {
-      try {
-        const resp = await fetch(url);
-        const buf = await resp.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
-        const page = await pdf.getPage(1);
-        const canvas = document.createElement("canvas");
-        preview.innerHTML = "";
-        preview.appendChild(canvas);
-        await page.render({ canvasContext: canvas.getContext("2d"), viewport: page.getViewport({ scale: 0.4 }) }).promise;
-      } catch {
-        preview.innerHTML = "<div style='color:#888;'>PDF</div>";
+      const ext = f.name.split('.').pop().toLowerCase();
+      if(['jpg','jpeg','png','gif','webp'].includes(ext)){
+        const img = new Image();
+        img.src = url;
+        img.onload = () => { preview.innerHTML=''; preview.appendChild(img); };
+      } else if(ext === 'pdf'){
+        try{
+          const resp = await fetch(url);
+          const buf = await resp.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+          const page = await pdf.getPage(1);
+          const canvas = document.createElement('canvas');
+          preview.innerHTML = '';
+          preview.appendChild(canvas);
+          await page.render({ canvasContext: canvas.getContext('2d'), viewport: page.getViewport({ scale:0.4 }) }).promise;
+        }catch(e){
+          preview.innerHTML = '<div style="color:#888;">PDF</div>';
+        }
       }
+
+      const name = document.createElement('div');
+      name.className = 'file-name';
+      name.textContent = f.name;
+
+      const actions = document.createElement('div');
+      actions.className = 'file-actions';
+      actions.innerHTML = `<a href="${url}" target="_blank" style="color:var(--yellow);text-decoration:none;">Open / Download</a><input type="checkbox" class="file-check" data-path="${full}">`;
+      card.appendChild(name);
+      card.appendChild(actions);
+
+      wrap.appendChild(card);
     }
-
-    const name = document.createElement("div");
-    name.className = "file-name";
-    name.textContent = f.name;
-
-    const actions = `
-      <div class="file-actions">
-        <a href="${url}" target="_blank" style="color:var(--yellow);text-decoration:none;">Open / Download</a>
-        <input type="checkbox" class="file-check" data-path="${full}">
-      </div>
-    `;
-
-    card.appendChild(name);
-    card.insertAdjacentHTML("beforeend", actions);
-
-    wrap.appendChild(card);
+  }catch(err){
+    console.error(err);
+    document.getElementById('filesWrap').innerHTML = '<div style="color:#f66">Error loading files</div>';
   }
 }
 
 /* UPLOAD */
-function triggerUpload() {
-  const picker = document.createElement("input");
-  picker.type = "file";
-
-  picker.onchange = async e => {
+function triggerUpload(){
+  const picker = document.createElement('input');
+  picker.type = 'file';
+  picker.onchange = async (e)=>{
     const file = e.target.files[0];
     const path = `codes/${currentCode}/${file.name}`;
-    await supa.storage.from(BUCKET).upload(path, file, { upsert: true });
+    await supa.storage.from(BUCKET).upload(path, file, { upsert:true });
     listFiles();
   };
-
   picker.click();
 }
 
 /* DELETE */
-function prepareDelete() {
-  if (!deleteMode) {
+function prepareDelete(){
+  if(!deleteMode){
     deleteMode = true;
-    document.getElementById("deleteBtn").textContent = "Confirm Delete";
-    alert("Select files then click Confirm Delete.");
+    document.getElementById('deleteBtn').textContent = 'Confirm Delete';
+    alert('Select files then click Confirm Delete.');
     return;
   }
-
   confirmDelete();
 }
-
-async function confirmDelete() {
-  const checks = [...document.querySelectorAll(".file-check:checked")];
-  if (checks.length === 0) {
-    alert("No files selected");
+async function confirmDelete(){
+  const checks = [...document.querySelectorAll('.file-check:checked')];
+  if(checks.length === 0){
+    alert('No files selected');
     deleteMode = false;
-    document.getElementById("deleteBtn").textContent = "Delete";
+    document.getElementById('deleteBtn').textContent = 'Delete';
     return;
   }
-
-  const paths = checks.map(c => c.dataset.path);
-
+  const paths = checks.map(c=>c.dataset.path);
   await supa.storage.from(BUCKET).remove(paths);
-
   deleteMode = false;
-  document.getElementById("deleteBtn").textContent = "Delete";
-
+  document.getElementById('deleteBtn').textContent = 'Delete';
   listFiles();
 }
 
 /* EDITOR */
-function openEditor() {
-  document.getElementById("overlay").style.display = "flex";
-}
-
-function closeEditor() {
-  document.getElementById("overlay").style.display = "none";
-}
-
-async function savePastedCode() {
-  const txt = document.getElementById("codeInputArea").value;
-  let fname = document.getElementById("filenameInput").value;
-
-  if (!fname) fname = "code.txt";
-
-  const blob = new Blob([txt], { type:"text/plain" });
-
+function openEditor(){ document.getElementById('overlay').style.display = 'flex'; }
+function closeEditor(){ document.getElementById('overlay').style.display = 'none'; }
+async function savePastedCode(){
+  const txt = document.getElementById('codeInputArea').value;
+  let fname = document.getElementById('filenameInput').value;
+  if(!fname) fname = 'code.txt';
+  const blob = new Blob([txt], { type: 'text/plain' });
   const path = `codes/${currentCode}/${fname}`;
-
   await supa.storage.from(BUCKET).upload(path, blob, { upsert:true });
-
-  closeEditor();
-  listFiles();
+  closeEditor(); listFiles();
 }
+
+/* GO BACK */
+function goBack(){
+  // cleanup chat
+  leaveChatRoom();
+  // hide chat column
+  document.getElementById('chatCol').classList.add('hidden');
+  document.getElementById('chatCol').setAttribute('aria-hidden','true');
+  // reset UI
+  document.getElementById('page2').style.display = 'none';
+  document.getElementById('page1').style.display = 'block';
+  document.getElementById('codeInput').value = '';
+  currentCode = '';
+  window.currentCode = '';
+  document.getElementById('filesWrap').innerHTML = '';
+  document.getElementById('codeLabel').textContent = 'Code: -';
+}
+
+/* ---------------- CHAT (ephemeral via Supabase Realtime broadcast) ---------------- */
+
+function initChatRoomForCode(code){
+  // Create channel but don't broadcast join until user provides name
+  if(!code) return;
+  if(chatChannel) {
+    try{ chatChannel.unsubscribe(); }catch(e){}
+    chatChannel = null;
+  }
+  chatChannel = supa.channel(`chat-${code}`);
+  // Listen for messages
+  chatChannel.on('broadcast', { event: 'message' }, (payload) => {
+    const { user, text, ts } = payload.payload || {};
+    if(user && text !== undefined) {
+      appendChatMessage(user, text, ts);
+    }
+  });
+  // Listen for join events: event 'join' -> show "name vannu"
+  chatChannel.on('broadcast', { event: 'join' }, (payload) => {
+    const { user, ts } = payload.payload || {};
+    if(user) appendSystem(`${user} vannu`);
+  });
+  // subscribe
+  chatChannel.subscribe().then(() => {
+    // ready
+  }).catch(e => console.warn('chat subscribe failed', e));
+}
+
+async function joinChatWithName(){
+  const name = (document.getElementById('nameInput').value || '').trim();
+  if(!name) return alert('Enter your name to join');
+  chatName = name;
+  // hide name screen, show chat content
+  document.getElementById('nameScreen').style.display = 'none';
+  document.getElementById('chatContent').style.display = 'flex';
+  // announce join to others as a 'join' broadcast
+  if(chatChannel){
+    try{
+      await chatChannel.send({ type:'broadcast', event:'join', payload: { user: chatName, ts: Date.now() }});
+    }catch(e){ console.warn('join broadcast failed', e); }
+  }
+  // focus input
+  document.getElementById('chatInput').focus();
+}
+
+/* Send chat message */
+async function sendChatMessage(){
+  const txt = (document.getElementById('chatInput').value || '').trim();
+  if(!txt) return;
+  if(!chatChannel || !chatName) return;
+  const payload = { user: chatName, text: txt, ts: Date.now() };
+  try{
+    await chatChannel.send({ type:'broadcast', event:'message', payload });
+    // also locally append (others will receive via supabase too)
+    appendChatMessage(chatName, txt, Date.now());
+    document.getElementById('chatInput').value = '';
+  }catch(e){
+    console.error('send failed', e);
+  }
+}
+
+/* Append chat message to UI */
+function appendChatMessage(user, text, ts){
+  const wrap = document.getElementById('messages');
+  const el = document.createElement('div');
+  el.className = 'msg';
+  // meta row
+  const meta = document.createElement('div');
+  meta.className = 'message-meta';
+  const left = document.createElement('div');
+  left.textContent = user;
+  const right = document.createElement('div');
+  try{
+    const d = new Date(ts || Date.now());
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    right.textContent = `${hh}:${mm}`;
+  }catch(e){ right.textContent = ''; }
+  meta.appendChild(left); meta.appendChild(right);
+  const body = document.createElement('div');
+  body.textContent = text;
+  el.appendChild(meta);
+  el.appendChild(body);
+  wrap.appendChild(el);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+/* Append system message like "Rahul vannu" */
+function appendSystem(text){
+  const wrap = document.getElementById('messages');
+  const el = document.createElement('div');
+  el.className = 'sys';
+  el.textContent = text;
+  wrap.appendChild(el);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+/* Leave chat and cleanup */
+async function leaveChatRoom(){
+  if(chatChannel){
+    try{
+      // optional: broadcast leave
+      if(chatName){
+        try { await chatChannel.send({ type:'broadcast', event:'leave', payload:{ user:chatName, ts:Date.now() }}); } catch(e){}
+      }
+      await chatChannel.unsubscribe();
+    }catch(e){}
+  }
+  chatChannel = null;
+  chatName = '';
+  // reset UI
+  document.getElementById('nameScreen').style.display = 'flex';
+  document.getElementById('chatContent').style.display = 'none';
+  document.getElementById('messages').innerHTML = '';
+  document.getElementById('nameInput').value = '';
+  document.getElementById('chatInput').value = '';
+}
+
+/* ------------- Wire UI actions ------------- */
+document.addEventListener('click', (e) => {
+  // daddy is home click
+  if(e.target && e.target.id === 'daddySubmit') {
+    joinChatWithName();
+  }
+});
+
+document.getElementById('nameInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') joinChatWithName();
+});
+
+document.getElementById('sendBtn').addEventListener('click', sendChatMessage);
+document.getElementById('chatInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') sendChatMessage();
+});
+
+/* make sure to cleanup when user leaves page */
+window.addEventListener('beforeunload', () => {
+  try { leaveChatRoom(); } catch(e){}
+});
+
+/* If user navigates back using back button, also cleanup */
+window.addEventListener('popstate', () => {
+  try { leaveChatRoom(); } catch(e){}
+});
+
 </script>
 </body>
 </html>
