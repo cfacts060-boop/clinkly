@@ -12,18 +12,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
   <style>
-
-.user-list-bar {
-  font-size: 12px;
-  color: var(--yellow);
-  padding: 6px 4px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  background: #050505;
-  position: sticky;
-  top: 0;
-  z-index: 50;
-}
-
     :root{
       --bg:#000;
       --white:#fff;
@@ -58,7 +46,7 @@
     .chat.hidden { display:none; }
 
     .chat-header {
-      font-size:14px;
+      font-size:18px;
       color:var(--yellow);
       padding-bottom:8px;
       border-bottom:1px solid rgba(255,255,255,0.03);
@@ -327,10 +315,7 @@
   <div class="app">
     <!-- CHAT (left) - hidden initially, only shown after code entry -->
     <div id="chatCol" class="chat hidden" aria-hidden="true">
-      <div class="chat-header">Mindiyum Parnjum Erikka</div>
-       <div id="userListBar" class="user-list-bar">No users online</div>
-
-
+      <div class="chat-header">Chat</div>
 
       <!-- name screen (centered vertically) -->
       <div id="nameScreen" class="name-screen">
@@ -384,16 +369,7 @@
             </div>
           </div>
 
-          <div id="codeLabel" style="display:flex;align-items:center;gap:10px;">
-  <span id="codeHidden">Code: enthanokkune</span>
-  <button id="codeEyeBtn" onclick="toggleCodeEye()" style="background:transparent;border:none;cursor:pointer;">
-    <svg id="codeEyeIcon" viewBox="0 0 24 24" width="22" height="22" fill="white">
-      <path d="M12 5c-5 0-9.27 3.11-11 7 1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/>
-      <circle cx="12" cy="12" r="2.5"/>
-    </svg>
-  </button>
-</div>
-
+          <div id="codeLabel">Code: -</div>
 
           <div class="files-grid" id="filesWrap"></div>
         </div>
@@ -417,26 +393,6 @@
   </div>
 
 <script>
-
-let codeVisible = false;
-
-function toggleCodeEye() {
-  const hidden = document.getElementById("codeHidden");
-  const icon = document.getElementById("codeEyeIcon");
-
-  if (!codeVisible) {
-    // show real code
-    hidden.textContent = "Code: " + currentCode;
-    codeVisible = true;
-    icon.style.opacity = "0.5";
-  } else {
-    // hide code
-    hidden.textContent = "Code: enthanokkune";
-    codeVisible = false;
-    icon.style.opacity = "1";
-  }
-}
-
 /* ----------------- CONFIG ----------------- */
 const SUPABASE_URL = "https://ajatxhuijtvwdkrmklwn.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqYXR4aHVpanR2d2Rrcm1rbHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0MTc3MDksImV4cCI6MjA3OTk5MzcwOX0.EsKC8PuxxgtqWljbZOSBJDd22ScPOuO3pb7HTDo6_xc";
@@ -449,14 +405,6 @@ let currentCode = "";
 let deleteMode = false;
 let chatChannel = null;
 let chatName = "";
-let onlineUsers = new Set();
-
-function updateUserListBar() {
-  const bar = document.getElementById("userListBar");
-  if (onlineUsers.size === 0) bar.textContent = "No users online";
-  else bar.textContent = [...onlineUsers].join(", ");
-}
-
 // timers map for scheduled deletions: key = `${ts}_${user}`
 const deletionTimers = new Map();
 
@@ -528,8 +476,7 @@ function enterCode(){
   document.getElementById('chatCol').removeAttribute('aria-hidden');
   document.getElementById('page1').style.display = 'none';
   document.getElementById('page2').style.display = 'block';
-  document.getElementById("codeHidden").textContent = "Code: enthanokkune";
-
+  document.getElementById('codeLabel').textContent = 'Code: ' + currentCode;
   // initialize file list and chat subscription (chat init lazy until join)
   listFiles();
   initChatRoomForCode(currentCode); // subscribe to channel (but we still wait for name to show input area)
@@ -689,24 +636,14 @@ function initChatRoomForCode(code){
   // Listen for join events: event 'join' -> show "name vannu"
   chatChannel.on('broadcast', { event: 'join' }, (payload) => {
     const { user, ts } = payload.payload || {};
-    if(user) {
-        onlineUsers.add(user);
-        updateUserListBar();
-        appendSystem(`${user} vannu`);
-    }
-});
-
+    if(user) appendSystem(`${user} vannu`);
+  });
 
   // Listen for leave events (optional)
   chatChannel.on('broadcast', { event: 'leave' }, (payload) => {
     const { user } = payload.payload || {};
-    if(user) {
-        onlineUsers.delete(user);
-        updateUserListBar();
-        appendSystem(`${user} poyi`);
-    }
-});
-
+    if(user) appendSystem(`${user} poyi`);
+  });
 
   // subscribe
   chatChannel.subscribe().then(() => {
@@ -729,9 +666,6 @@ async function joinChatWithName() {
   if (!name) return alert('Enter your name to join');
 
   chatName = name;
-onlineUsers.add(chatName);
-updateUserListBar();
-
 
   // show chat box
   document.getElementById('nameScreen').style.display = 'none';
@@ -881,9 +815,6 @@ async function leaveChatRoom(){
     try{
       // optional: broadcast leave
       if(chatName){
-onlineUsers.delete(chatName);
-updateUserListBar();
-
         try { await chatChannel.send({ type:'broadcast', event:'leave', payload:{ user:chatName, ts:Date.now() }}); } catch(e){}
       }
       await chatChannel.unsubscribe();
@@ -966,3 +897,4 @@ window.addEventListener('popstate', () => {
 
 </body>
 </html>
+
