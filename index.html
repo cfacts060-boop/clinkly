@@ -2,899 +2,307 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Clinkly</title>
-
-  <!-- Supabase (v2) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- PDF.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MotionSync — Create Without Limits</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#000;
-      --white:#fff;
-      --muted:#9aa7b2;
-      --yellow:#FFD700;
-      --card-bg: rgba(255,255,255,0.05);
-      --chat-width: 300px;
+      --bg:#ffffff; --text:#0b0b0b; --muted:#6b7280; --accent:#3A7BFF; --soft:#f6f7fb; --card:#fbfcfe;
+      --radius:14px; --shadow: 0 8px 30px rgba(15,23,42,0.06);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial; margin:0; background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;}
+    a{text-decoration:none;color:inherit}
+    .container{max-width:1200px;margin:0 auto;padding:28px}
+
+    /* Header */
+    header{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#7bb6ff);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-family:Poppins}
+    .brand h1{margin:0;font-size:18px;font-family:Poppins}
+    nav{display:flex;gap:18px;align-items:center}
+    nav a{color:var(--muted);font-weight:600}
+    .cta{background:var(--accent);color:white;padding:10px 16px;border-radius:10px;font-weight:600}
+
+    /* Hero */
+    .hero{display:grid;grid-template-columns:1fr 480px;gap:40px;align-items:center;padding:44px 0}
+    .hero h2{font-size:34px;margin:0 0 12px;font-family:Poppins}
+    .sub{color:var(--muted);margin-bottom:18px}
+    .features{display:flex;gap:12px;flex-wrap:wrap}
+    .feature{background:var(--soft);padding:10px 12px;border-radius:10px;color:var(--muted);font-weight:600}
+
+    /* Product card */
+    .card{background:var(--card);border-radius:16px;padding:20px;box-shadow:var(--shadow);}
+    .device{background:linear-gradient(#fff,#f4f7ff);border-radius:12px;padding:18px;text-align:center}
+    .device .mock{width:100%;height:260px;border-radius:10px;background:linear-gradient(180deg,#eef4ff 0%, #ffffff 60%);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+    .mock svg{width:60%;height:auto;opacity:0.95}
+    .price-row{display:flex;align-items:center;justify-content:space-between;margin-top:16px}
+    .price{font-size:24px;font-weight:700}
+    .old{color:var(--muted);text-decoration:line-through;font-weight:600}
+    .selector{margin-top:12px;display:flex;gap:8px;align-items:center}
+    .color-swatch{width:36px;height:36px;border-radius:8px;border:2px solid transparent;cursor:pointer}
+    .color-swatch.selected{border-color:rgba(0,0,0,0.08);box-shadow:0 6px 18px rgba(58,123,255,0.12)}
+    .buy-row{display:flex;gap:10px;margin-top:18px}
+    .btn{padding:12px 16px;border-radius:12px;border:none;font-weight:700;cursor:pointer}
+    .btn-primary{background:var(--accent);color:white}
+    .btn-light{background:white;border:1px solid #e6e9f2}
+
+    /* Trust & benefits */
+    .trust{display:flex;gap:16px;margin:28px 0;color:var(--muted);flex-wrap:wrap}
+    .trust .item{display:flex;gap:8px;align-items:center}
+
+    /* Reviews */
+    .reviews{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+    .review{background:white;border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(15,23,42,0.03)}
+    .stars{color:#ffb400;font-weight:700}
+
+    /* FAQ & Footer */
+    .faq{margin-top:24px}
+    footer{margin-top:36px;border-top:1px solid #eef2f7;padding:28px 0;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap}
+
+    /* Responsive */
+    @media (max-width:1000px){.hero{grid-template-columns:1fr 380px}}
+    @media (max-width:880px){
+      .hero{grid-template-columns:1fr; text-align:center; padding:20px 0}
+      .device .mock{height:220px}
+      aside{margin-top:20px}
+    }
+    @media (max-width:560px){
+      .container{padding:12px}
+      header{flex-direction:column;align-items:flex-start;gap:12px}
+      nav{gap:10px;flex-wrap:wrap}
+      .hero h2{font-size:26px}
+      .device .mock{height:180px}
+      .reviews{grid-template-columns:1fr}
+      .price-row{flex-direction:column;align-items:flex-start;gap:6px}
+      .buy-row{flex-direction:column}
+      .btn{width:100%;text-align:center}
+      .selector{justify-content:center}
     }
 
-    html,body{height:100%; margin:0; background:var(--bg); color:var(--white); font-family:Arial, Helvetica, sans-serif; }
+    /* Simple cart */ drawer */
+    .cart-drawer{position:fixed;right:18px;bottom:18px;background:var(--accent);color:white;padding:12px 16px;border-radius:12px;box-shadow:0 10px 30px rgba(58,123,255,0.18);cursor:pointer}
+    .badge{background:#ff4b6e;color:white;padding:6px 8px;border-radius:8px;font-weight:700;margin-left:8px}
 
-    /* Layout: left chat column + main content */
-    .app {
-      display:flex;
-      height:100vh;
-      overflow:hidden;
-    }
+    /* Small helpers */
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+  .mobile-menu-btn{display:none;cursor:pointer;font-size:28px;}
+.mobile-menu{display:none;flex-direction:column;gap:12px;background:white;padding:16px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.08);margin-top:10px}
+@media(max-width:700px){nav{display:none}.mobile-menu-btn{display:block}}
 
-    /* CHAT (left column) - hidden until page2 */
-    .chat {
-      width:var(--chat-width);
-      min-width:var(--chat-width);
-      background:#050505;
-      border-right:1px solid rgba(255,255,255,0.03);
-      display:flex;
-      flex-direction:column;
-      z-index:20;
-      box-sizing:border-box;
-      padding:12px;
-    }
+/* Sticky Mobile Cart */
+.sticky-cart{position:fixed;bottom:0;left:0;right:0;background:white;padding:14px;box-shadow:0 -4px 20px rgba(0,0,0,0.08);display:flex;justify-content:space-between;align-items:center;z-index:999}
+.sticky-cart button{flex:1;margin-left:10px}
 
-    .chat.hidden { display:none; }
-
-    .chat-header {
-      font-size:18px;
-      color:var(--yellow);
-      padding-bottom:8px;
-      border-bottom:1px solid rgba(255,255,255,0.03);
-      font-weight:normal;
-    }
-
-    /* Name screen (vertically centered) */
-    .name-screen {
-      flex:1;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .name-box {
-      width:100%;
-      text-align:center;
-      padding: 8px 12px;
-    }
-
-    #nameInput {
-      width:85%;
-      padding:10px;
-      border-radius:8px;
-      border:1px solid rgba(255,255,255,0.06);
-      background:transparent;
-      color:var(--white);
-      outline:none;
-      margin-bottom:12px;
-      font-size:14px;
-    }
-
-    /* daddy is home is plain text (no box) */
-    #daddySubmit {
-      display:inline-block;
-      color:var(--yellow);
-      cursor:pointer;
-      font-size:15px;
-      user-select:none;
-      padding:6px 6px;
-      background:transparent;
-    }
-
-    /* Chat content */
-    .chat-body {
-  display:flex;
-  flex-direction:column;
-  height:calc(100% - 60px); /* keep inside chat column */
-  overflow:hidden; /* prevent overflow */
-}
-
-
-   #messages {
-  flex:1;
-  min-height:0;
-  overflow-y:auto;
-  padding:12px;
-  box-sizing:border-box;
-  display:flex;         /* ADD THIS */
-  flex-direction:column;/* ADD THIS */
-  gap:8px;              /* optional spacing */
-}
-
-
-   .msg {
-  max-width: 75%;     
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  padding: 8px;
-  border-radius: 10px;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-
-/* WhatsApp-style left/right alignment */
-.msg-left {
-  align-self: flex-start;
-  margin-right: auto;
-  background: rgba(255,255,255,0.07);
-}
-
-.msg-right {
-  align-self: flex-end;
-  margin-left: auto;
-  background: rgba(255,255,255,0.15);
-}
-
-    .sys {
-      font-style:italic;
-      opacity:0.9;
-      color:var(--muted);
-      margin-bottom:8px;
-    }
-
-    .message-meta { font-size:12px; color:var(--muted); margin-bottom:6px; display:flex; justify-content:space-between; gap:10px; }
-
-    .chat-input-row {
-      padding:10px;
-      border-top:1px solid rgba(255,255,255,0.03);
-      display:flex;
-      gap:8px;
-      align-items:center;
-    }
-
-    #chatInput {
-      flex:1;
-      padding:10px;
-      border-radius:8px;
-      border:1px solid rgba(255,255,255,0.06);
-      background:transparent;
-      color:var(--white);
-      outline:none;
-    }
-
-    #sendBtn {
-      padding:10px 12px;
-      border-radius:8px;
-      background:var(--yellow);
-      border:none;
-      color:#000;
-      font-weight:bold;
-      cursor:pointer;
-    }
-
-    /* MAIN CONTENT (right) */
-    .main {
-      flex:1;
-      overflow:auto;
-      box-sizing:border-box;
-    }
-
-    .wrap {
-      max-width:1100px;
-      margin:0 auto;
-      padding:30px;
-      text-align:center;
-      box-sizing:border-box;
-    }
-
-    /* Page1 / Page2 container */
-    #page1, #page2 { min-height:calc(100vh - 0px); }
-
-    #page1 { padding-top:70px; }
-
-    h1 { font-size:48px; margin-bottom:40px; }
-
-    .input-wrap{
-  position:relative;
-  display:inline-block;
-  margin:0 auto;
-  width:260px; /* FIX: this keeps the eye icon inside */
-}
-
-
-
-
-    #codeInput{
-      width:200px;
-      padding:12px 44px 12px 16px;
-      background:transparent;
-      border:1px solid #333;
-      border-radius:30px;
-      color:white;
-      font-size:18px;
-      outline:none;
-    }
-
-    .eye-btn{ position:absolute; right:10px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer;}
-    .eye-btn svg { width:22px;height:22px; fill:white; opacity:0.9; }
-
-    .bat-btn{
-  margin-top:25px;
-  font-size:20px;
-  font-weight:bold;
-  background:transparent;
-  color:white;
-  border:none;
-  cursor:pointer;
-  display:block;
-  margin-left:auto;
-  margin-right:auto;
-}
-
-
-    /* Page 2 topbar and files - no gap to chat */
-    #page2 .topbar { display:flex; justify-content:space-between; margin-bottom:20px; align-items:center; }
-    .btn { background:transparent; border:1px solid #444; padding:8px 14px; border-radius:8px; color:white; cursor:pointer; margin-right:8px; }
-    .back-btn { border:1px solid #444; padding:8px 14px; color:white; background:transparent; border-radius:8px; cursor:pointer; }
-
-    #codeLabel { color:var(--yellow); font-size:18px; text-align:left; }
-
-    .files-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:16px; padding-top:18px; }
-
-    .file-card{ background:var(--card-bg); border-radius:10px; padding:10px; text-align:left; }
-
-    .preview{ height:120px; background:#111; border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden; }
-
-    .preview img{ width:100%; height:100%; object-fit:cover; }
-
-    .file-name{ margin-top:8px; font-size:14px; color:white; }
-
-    .file-actions{ margin-top:6px; display:flex; justify-content:space-between; font-size:12px; }
-
-    .overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:60; }
-    .editor-box{ width:85%; max-width:700px; background:#071018; padding:20px; border-radius:12px; border:1px solid #222; }
-    textarea{ width:100%; height:280px; background:transparent; border:1px solid #222; color:white; border-radius:8px; padding:10px; font-family:monospace; }
-
-    /* small screens */
-    @media (max-width:900px){
-      .chat { display:none; }
-    }
-/* Ultra-thin minimal yellow scrollbar for chat */
-#messages::-webkit-scrollbar {
-  width: 4px;              /* very thin */
-}
-
-#messages::-webkit-scrollbar-track {
-  background: transparent; /* no track bar */
-}
-
-#messages::-webkit-scrollbar-thumb {
-  background: var(--yellow);
-  border-radius: 10px;
-}
-
-#messages::-webkit-scrollbar-thumb:hover {
-  background: #ffe45c;      /* lighter yellow on hover */
-}
-/* auto-color bubbles */
-.msg {
-  max-width: 75%;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  padding: 8px 10px;
-  border-radius: 10px;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.msg-left {
-  align-self: flex-start;
-  margin-right: auto;
-}
-
-.msg-right {
-  align-self: flex-end;
-  margin-left: auto;
-}
-
-/* this class receives unique background color from JS */
-.auto-color {
-  background: rgba(255,255,255,0.12);
-}
-.user-name {
-  font-weight: 700;     /* bold */
-  font-size: 12px;      /* slightly bigger */
-  margin-bottom: 2px;   /* small spacing above message time */
-}
-
-
-
-  </style>
+</style>
 </head>
 <body>
-  <div class="app">
-    <!-- CHAT (left) - hidden initially, only shown after code entry -->
-    <div id="chatCol" class="chat hidden" aria-hidden="true">
-      <div class="chat-header">Chat</div>
-
-      <!-- name screen (centered vertically) -->
-      <div id="nameScreen" class="name-screen">
-        <div class="name-box">
-          <input id="nameInput" placeholder="Enter your name" maxlength="30" autocomplete="off" />
-          <div id="daddySubmit">daddy is home</div>
-        </div>
-      </div>
-
-      <!-- chat content (hidden until joined) -->
-      <div id="chatContent" class="chat-body" style="display:none;">
-        <div id="messages"></div>
-
-        <div class="chat-input-row">
-          <input id="chatInput" placeholder="Type a message..." autocomplete="off" />
-          <button id="sendBtn">Send</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- MAIN CONTENT (right) -->
-    <div class="main">
-      <div class="wrap">
-
-        <!-- PAGE 1 -->
-        <div id="page1">
-          <h1>Clinkly</h1>
-
-          <div class="input-wrap">
-            <input id="codeInput" type="password" placeholder="Enter code">
-            <button class="eye-btn" onclick="toggleEye()">
-              <svg viewBox="0 0 24 24"><path d="M12 5c-5 0-9.27 3.11-11 7 1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/><circle cx="12" cy="12" r="2.5"/></svg>
-            </button>
-          </div>
-
-          <div>
-            <button class="bat-btn" onclick="enterCode()">I'm Batman</button>
-          </div>
-        </div>
-
-        <!-- PAGE 2 (same file, toggled on) -->
-        <div id="page2" style="display:none; text-align:left;">
-          <div class="topbar">
-            <div>
-              <button class="btn" onclick="triggerUpload()">Upload</button>
-              <button class="btn" id="deleteBtn" onclick="prepareDelete()">Delete</button>
-              <button class="btn" onclick="openEditor()">Share Code</button>
-            </div>
-            <div style="text-align:right;">
-              <button class="back-btn" onclick="goBack()">← Back</button>
-            </div>
-          </div>
-
-          <div id="codeLabel">Code: -</div>
-
-          <div class="files-grid" id="filesWrap"></div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- EDITOR OVERLAY -->
-  <div id="overlay" class="overlay">
-    <div class="editor-box">
-      <textarea id="codeInputArea" placeholder="// paste here"></textarea>
-      <div style="display:flex;justify-content:space-between;margin-top:10px;">
-        <input id="filenameInput" placeholder="filename.txt" style="width:200px;padding:10px;border-radius:8px;border:1px solid #222;background:transparent;color:white;">
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">MS</div>
         <div>
-          <button class="btn" onclick="closeEditor()">Cancel</button>
-          <button class="btn" onclick="savePastedCode()">Save</button>
+          <h1>MotionSync</h1>
+          <div class="small muted">Create Without Limits</div>
         </div>
       </div>
+      <nav>
+        <a href="#features">Features</a>
+        <a href="#reviews">Reviews</a>
+        <a href="#faq">FAQ</a>
+        <a class="cta" href="#buy">Buy Now</a>
+      </nav>
+    </header>
+
+<!-- Mobile Menu Trigger -->
+<div class="mobile-menu-btn" id="menuBtn">☰</div>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#features">Features</a>
+  <a href="#reviews">Reviews</a>
+  <a href="#faq">FAQ</a>
+  <a href="#buy" class="cta">Buy Now</a>
+</div>
+
+    <main>
+      <section class="hero" style="padding:0;">
+  <div class="hero-banner" style="position:relative;overflow:hidden;border-radius:18px;">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABgAAAAQACAIAAACoEwUVAADKoWNhQlgAAMqhanV...XRhbFNvdXJjZVR5cGV4Rmh0dHA6Ly9jdi5pcHRjLm9yZy9uZXdzY29kZXMvZGln" alt="MotionSync Hero" style="width:100%;height:auto;display:block;object-fit:cover;">
+    <div style="position:absolute;left:6%;top:18%;transform:translateY(-10%);max-width:48%;">
+      <h2 style="font-size:64px;line-height:1;letter-spacing:1px;margin:0;color:white;font-family:Poppins">CREATE<br>WITHOUT<br>LIMITS</h2>
+      <div style="margin-top:18px;color:#78b6ff;font-weight:600;font-size:18px">AI AUTO-TRACKING STABILIZER</div>
+      <div style="display:flex;gap:12px;margin-top:24px">
+        <a href="#shop" class="btn btn-light" style="padding:16px 26px;border-radius:12px;text-decoration:none;font-weight:800">SHOP NOW</a>
+        <a href="#buy" class="btn btn-primary" style="padding:16px 26px;border-radius:12px;text-decoration:none;font-weight:800;background:#000;color:#fff;box-shadow:0 8px 30px rgba(0,0,0,0.4)">BUY NOW</a>
+      </div>
     </div>
+    <!-- right side product area is part of the hero image -->
   </div>
+</section>
+
+<section id="features">
+
+        <h3>Features</h3>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px">
+          <div class="card">
+            <h4 style="margin:0 0 6px">AI Tracking</h4>
+            <div class="muted small">Advanced face & body tracking keeps you in frame while you move — perfect for workouts, tutorials, and live streaming.</div>
+          </div>
+          <div class="card">
+            <h4 style="margin:0 0 6px">Portable</h4>
+            <div class="muted small">Foldable design fits in your bag and sets up in seconds.</div>
+          </div>
+          <div class="card">
+            <h4 style="margin:0 0 6px">Long Battery</h4>
+            <div class="muted small">USB-C quick charge with long-lasting battery for marathon shoots.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="reviews">
+        <h3 style="margin-top:18px">What creators say</h3>
+        <div class="reviews">
+          <div class="review">
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:44px;height:44px;border-radius:8px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-weight:700">AR</div><div><strong>Arya</strong><div class="small muted">Content creator</div></div></div>
+            <div style="margin-top:8px" class="stars">★★★★★</div>
+            <div class="small muted" style="margin-top:6px">"MotionSync made my vlogs 10x easier. I go hands-free on shoots now."</div>
+          </div>
+          <div class="review">
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:44px;height:44px;border-radius:8px;background:#fff4f0;display:flex;align-items:center;justify-content:center;font-weight:700">MK</div><div><strong>Maya</strong><div class="small muted">Fitness coach</div></div></div>
+            <div style="margin-top:8px" class="stars">★★★★★</div>
+            <div class="small muted" style="margin-top:6px">"Now I do live workouts without asking my assistant to film. It's a game changer."</div>
+          </div>
+          <div class="review">
+            <div style="display:flex;align-items:center;gap:10px"><div style="width:44px;height:44px;border-radius:8px;background:#fffcf0;display:flex;align-items:center;justify-content:center;font-weight:700">SJ</div><div><strong>Sanjay</strong><div class="small muted">Teacher</div></div></div>
+            <div style="margin-top:8px" class="stars">★★★★★</div>
+            <div class="small muted" style="margin-top:6px">"Perfect for recording my online classes. Simple and reliable."</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="faq" id="faq">
+        <h3>FAQ</h3>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px">
+          <div class="card">
+            <strong>How does the tracking work?</strong>
+            <div class="small muted" style="margin-top:6px">MotionSync uses built-in sensors with AI-powered algorithms to follow faces and bodies. No extra app required for basic tracking.</div>
+          </div>
+          <div class="card">
+            <strong>What phones are supported?</strong>
+            <div class="small muted" style="margin-top:6px">Any smartphone with Bluetooth. Full support for iOS & Android.</div>
+          </div>
+          <div class="card">
+            <strong>Shipping times</strong>
+            <div class="small muted" style="margin-top:6px">Typical delivery: 3–10 business days (depending on region). Expedited options available at checkout.</div>
+          </div>
+          <div class="card">
+            <strong>Warranty</strong>
+            <div class="small muted" style="margin-top:6px">12-month warranty and 30-day money back guarantee.</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer>
+      <div>&copy; MotionSync — Create Without Limits</div>
+      <div>
+        <span class="muted">Email: support@motionsync.example</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <div class="cart-drawer" id="cartBtn">Cart <span class="badge" id="cartCount">0</span></div>
+
+  <script>
+    // Simple cart logic
+    const addBtn = document.getElementById('addBtn');
+    const buyNow = document.getElementById('buyNow');
+    const cartCount = document.getElementById('cartCount');
+    const cartBtn = document.getElementById('cartBtn');
+    const swatches = document.querySelectorAll('.color-swatch');
+    const mock = document.getElementById('mock');
+
+    let cart = JSON.parse(localStorage.getItem('ms_cart')||'[]');
+    function renderCart(){
+      cartCount.textContent = cart.length;
+    }
+    renderCart();
+
+    // color selection
+    swatches.forEach(s=>s.addEventListener('click', ()=>{
+      swatches.forEach(x=>x.classList.remove('selected'));
+      s.classList.add('selected');
+      const color = s.dataset.color;
+      // change mock background accent
+      if(color==='black') mock.style.background='linear-gradient(180deg,#eef4ff,#ffffff)';
+      if(color==='white') mock.style.background='linear-gradient(180deg,#ffffff,#f7f8fb)';
+      if(color==='blue') mock.style.background='linear-gradient(180deg,#e8f0ff,#ffffff)';
+    }));
+
+    addBtn.addEventListener('click', ()=>{
+      const variant = document.querySelector('.color-swatch.selected').dataset.color;
+      cart.push({id:'ms-360',title:'MotionSync 360',price:59,variant});
+      localStorage.setItem('ms_cart',JSON.stringify(cart));
+      renderCart();
+      addBtn.textContent='Added';
+      setTimeout(()=> addBtn.textContent='Add to cart — $59',1200);
+    });
+
+    buyNow.addEventListener('click', ()=>{
+      // quick checkout flow (mock)
+      const variant = document.querySelector('.color-swatch.selected').dataset.color;
+      const order = [{id:'ms-360',title:'MotionSync 360',price:59,variant}];
+      localStorage.setItem('ms_checkout', JSON.stringify(order));
+      window.location.href = '#checkout';
+      alert('Proceeding to mock checkout — replace with Stripe/Shopify integration');
+    });
+
+    cartBtn.addEventListener('click', ()=>{
+      const items = JSON.parse(localStorage.getItem('ms_cart')||'[]');
+      if(items.length===0) return alert('Cart is empty');
+      let summary = 'Cart:\n\n';
+      let total=0;
+      items.forEach((it,i)=>{ summary += `${i+1}. ${it.title} — $${it.price} (${it.variant})\n`; total+=it.price});
+      summary += `\nTotal: $${total}`;
+      if(confirm(summary+'\n\nGo to checkout?')){
+        localStorage.setItem('ms_checkout', JSON.stringify(items));
+        alert('Redirecting to mock checkout — integrate real payment gateway');
+      }
+    });
+
+    // Demo: animate mock slightly
+    let rot=0;
+    setInterval(()=>{rot=(rot+0.3)%360; mock.style.transform = `rotate(${Math.sin(rot/30)*1.2}deg)`},40);
+  </script>
+<!-- Sticky Mobile Cart -->
+<div class="sticky-cart" id="stickyBar" style="display:none">
+  <div><strong>$59</strong> <span class="small muted">MotionSync</span></div>
+  <button class="btn btn-primary" id="stickyAdd">Add to Cart</button>
+</div>
 
 <script>
-/* ----------------- CONFIG ----------------- */
-const SUPABASE_URL = "https://ajatxhuijtvwdkrmklwn.supabase.co";
-const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqYXR4aHVpanR2d2Rrcm1rbHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0MTc3MDksImV4cCI6MjA3OTk5MzcwOX0.EsKC8PuxxgtqWljbZOSBJDd22ScPOuO3pb7HTDo6_xc";
-const BUCKET = "clinkly-files";
-
-const supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
-
-/* -------------- STATE -------------- */
-let currentCode = "";
-let deleteMode = false;
-let chatChannel = null;
-let chatName = "";
-// timers map for scheduled deletions: key = `${ts}_${user}`
-const deletionTimers = new Map();
-
-/* ---------------- STORAGE HELPERS ---------------- */
-// storage key for a given room
-function storageKeyForRoom(code){ return `clinkly_msgs_${code}`; }
-
-// load messages for room, and remove any older than 3 hours
-function loadStoredMessagesForRoom(code){
-  if(!code) return [];
-  try{
-    const raw = localStorage.getItem(storageKeyForRoom(code));
-    const arr = raw ? JSON.parse(raw) : [];
-    const cutoff = Date.now() - (3 * 60 * 60 * 1000);
-    const filtered = arr.filter(m => Number(m.ts) >= cutoff);
-    // rewrite filtered (cleanup old)
-    localStorage.setItem(storageKeyForRoom(code), JSON.stringify(filtered));
-    return filtered;
-  }catch(e){
-    console.warn('loadStoredMessagesForRoom error', e);
-    return [];
-  }
-}
-
-function persistMessageForRoom(code, msg){
-  if(!code || !msg) return;
-  try{
-    const key = storageKeyForRoom(code);
-    const raw = localStorage.getItem(key);
-    const arr = raw ? JSON.parse(raw) : [];
-    // dedupe by ts+user+text to be safe
-    const exists = arr.some(m => String(m.ts) === String(msg.ts) && m.user === msg.user && m.text === msg.text);
-    if(!exists){
-      arr.push(msg);
-      localStorage.setItem(key, JSON.stringify(arr));
-    }
-  }catch(e){
-    console.warn('persistMessageForRoom error', e);
-  }
-}
-
-function removeMessageFromStorage(code, msg){
-  if(!code || !msg) return;
-  try{
-    const key = storageKeyForRoom(code);
-    const raw = localStorage.getItem(key);
-    if(!raw) return;
-    let arr = JSON.parse(raw);
-    arr = arr.filter(m => !(String(m.ts) === String(msg.ts) && m.user === msg.user && m.text === msg.text));
-    localStorage.setItem(key, JSON.stringify(arr));
-  }catch(e){
-    console.warn('removeMessageFromStorage error', e);
-  }
-}
-
-/* -------------- PAGE 1: minimal validation & move to page2 -------------- */
-function toggleEye(){
-  const i = document.getElementById('codeInput');
-  i.type = i.type === 'password' ? 'text' : 'password';
-}
-
-function enterCode(){
-  const code = (document.getElementById('codeInput').value || '').trim();
-  if(code.length < 4) return alert('Code must be at least 4 characters');
-  currentCode = code;
-  window.currentCode = code; // allow chat module to read if needed
-  // show chat column and page2
-  document.getElementById('chatCol').classList.remove('hidden');
-  document.getElementById('chatCol').removeAttribute('aria-hidden');
-  document.getElementById('page1').style.display = 'none';
-  document.getElementById('page2').style.display = 'block';
-  document.getElementById('codeLabel').textContent = 'Code: ' + currentCode;
-  // initialize file list and chat subscription (chat init lazy until join)
-  listFiles();
-  initChatRoomForCode(currentCode); // subscribe to channel (but we still wait for name to show input area)
-}
-
-/* -------------- PAGE 2 / FILES (Supabase Storage) -------------- */
-async function listFiles(){
-  const wrap = document.getElementById('filesWrap');
-  wrap.innerHTML = '<div style="color:#888">Loading...</div>';
-  try{
-    const folder = `codes/${currentCode}`;
-    const { data, error } = await supa.storage.from(BUCKET).list(folder);
-    if(error) throw error;
-    wrap.innerHTML = '';
-    if(!data || data.length === 0){
-      wrap.innerHTML = '<div style="color:#888;">No files</div>';
-      return;
-    }
-    for(let f of data){
-      const full = `${folder}/${f.name}`;
-      const url = supa.storage.from(BUCKET).getPublicUrl(full).data.publicUrl;
-      const card = document.createElement('div');
-      card.className = 'file-card';
-      const preview = document.createElement('div');
-      preview.className = 'preview';
-      preview.innerHTML = '<div style="color:#666;">Preview</div>';
-      card.appendChild(preview);
-
-      const ext = f.name.split('.').pop().toLowerCase();
-      if(['jpg','jpeg','png','gif','webp'].includes(ext)){
-        const img = new Image();
-        img.src = url;
-        img.onload = () => { preview.innerHTML=''; preview.appendChild(img); };
-      } else if(ext === 'pdf'){
-        try{
-          const resp = await fetch(url);
-          const buf = await resp.arrayBuffer();
-          const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
-          const page = await pdf.getPage(1);
-          const canvas = document.createElement('canvas');
-          preview.innerHTML = '';
-          preview.appendChild(canvas);
-          await page.render({ canvasContext: canvas.getContext('2d'), viewport: page.getViewport({ scale:0.4 }) }).promise;
-        }catch(e){
-          preview.innerHTML = '<div style="color:#888;">PDF</div>';
-        }
-      }
-
-      const name = document.createElement('div');
-      name.className = 'file-name';
-      name.textContent = f.name;
-
-      const actions = document.createElement('div');
-      actions.className = 'file-actions';
-      actions.innerHTML = `<a href="${url}" target="_blank" style="color:var(--yellow);text-decoration:none;">Open / Download</a><input type="checkbox" class="file-check" data-path="${full}">`;
-      card.appendChild(name);
-      card.appendChild(actions);
-
-      wrap.appendChild(card);
-    }
-  }catch(err){
-    console.error(err);
-    document.getElementById('filesWrap').innerHTML = '<div style="color:#f66">Error loading files</div>';
-  }
-}
-
-/* UPLOAD */
-function triggerUpload(){
-  const picker = document.createElement('input');
-  picker.type = 'file';
-  picker.onchange = async (e)=>{
-    const file = e.target.files[0];
-    const path = `codes/${currentCode}/${file.name}`;
-    await supa.storage.from(BUCKET).upload(path, file, { upsert:true });
-    listFiles();
-  };
-  picker.click();
-}
-
-/* DELETE */
-function prepareDelete(){
-  if(!deleteMode){
-    deleteMode = true;
-    document.getElementById('deleteBtn').textContent = 'Confirm Delete';
-    alert('Select files then click Confirm Delete.');
-    return;
-  }
-  confirmDelete();
-}
-async function confirmDelete(){
-  const checks = [...document.querySelectorAll('.file-check:checked')];
-  if(checks.length === 0){
-    alert('No files selected');
-    deleteMode = false;
-    document.getElementById('deleteBtn').textContent = 'Delete';
-    return;
-  }
-  const paths = checks.map(c=>c.dataset.path);
-  await supa.storage.from(BUCKET).remove(paths);
-  deleteMode = false;
-  document.getElementById('deleteBtn').textContent = 'Delete';
-  listFiles();
-}
-
-/* EDITOR */
-function openEditor(){ document.getElementById('overlay').style.display = 'flex'; }
-function closeEditor(){ document.getElementById('overlay').style.display = 'none'; }
-async function savePastedCode(){
-  const txt = document.getElementById('codeInputArea').value;
-  let fname = document.getElementById('filenameInput').value;
-  if(!fname) fname = 'code.txt';
-  const blob = new Blob([txt], { type: 'text/plain' });
-  const path = `codes/${currentCode}/${fname}`;
-  await supa.storage.from(BUCKET).upload(path, blob, { upsert:true });
-  closeEditor(); listFiles();
-}
-
-/* GO BACK */
-function goBack(){
-  // cleanup chat
-  leaveChatRoom();
-  // hide chat column
-  document.getElementById('chatCol').classList.add('hidden');
-  document.getElementById('chatCol').setAttribute('aria-hidden','true');
-  // reset UI
-  document.getElementById('page2').style.display = 'none';
-  document.getElementById('page1').style.display = 'block';
-  document.getElementById('codeInput').value = '';
-  currentCode = '';
-  window.currentCode = '';
-  document.getElementById('filesWrap').innerHTML = '';
-  document.getElementById('codeLabel').textContent = 'Code: -';
-}
-
-/* ---------------- CHAT (ephemeral via Supabase Realtime broadcast) ---------------- */
-
-function initChatRoomForCode(code){
-  // Create channel but don't broadcast join until user provides name
-  if(!code) return;
-  if(chatChannel) {
-    try{ chatChannel.unsubscribe(); }catch(e){}
-    chatChannel = null;
-  }
-  // enable broadcasting to self so join/messages come back to sender too
-  chatChannel = supa.channel(`chat-${code}`, {
-    config: { broadcast: { self: true } }
-  });
-
-  // Listen for messages
-  chatChannel.on('broadcast', { event: 'message' }, (payload) => {
-    const { user, text, ts } = payload.payload || {};
-    if(user && text !== undefined) {
-      appendChatMessage(user, text, ts, { fromStorage:false });
-    }
-  });
-
-  // Listen for join events: event 'join' -> show "name vannu"
-  chatChannel.on('broadcast', { event: 'join' }, (payload) => {
-    const { user, ts } = payload.payload || {};
-    if(user) appendSystem(`${user} vannu`);
-  });
-
-  // Listen for leave events (optional)
-  chatChannel.on('broadcast', { event: 'leave' }, (payload) => {
-    const { user } = payload.payload || {};
-    if(user) appendSystem(`${user} poyi`);
-  });
-
-  // subscribe
-  chatChannel.subscribe().then(() => {
-    // once subscribed, load stored messages for this room and show them
-    try{
-      const stored = loadStoredMessagesForRoom(code);
-      // append stored messages in chronological order
-      stored.sort((a,b)=> Number(a.ts) - Number(b.ts));
-      for(const m of stored){
-        appendChatMessage(m.user, m.text, m.ts, { fromStorage:true });
-      }
-    }catch(e){
-      console.warn('load stored messages failed', e);
-    }
-  }).catch(e => console.warn('chat subscribe failed', e));
-}
-
-async function joinChatWithName() {
-  const name = (document.getElementById('nameInput').value || '').trim();
-  if (!name) return alert('Enter your name to join');
-
-  chatName = name;
-
-  // show chat box
-  document.getElementById('nameScreen').style.display = 'none';
-  document.getElementById('chatContent').style.display = 'flex';
-
-  // 🔥 Load stored messages AFTER chat shows
-  try {
-    const stored = loadStoredMessagesForRoom(currentCode);
-    stored.sort((a,b)=> Number(a.ts) - Number(b.ts));
-    for (const m of stored) {
-      appendChatMessage(m.user, m.text, m.ts, { fromStorage:true });
-    }
-  } catch (e) {
-    console.warn("Failed loading stored messages", e);
-  }
-
-  // announce join
-  if (chatChannel) {
-    try {
-      await chatChannel.send({
-        type: 'broadcast',
-        event: 'join',
-        payload: { user: chatName, ts: Date.now() }
-      });
-    } catch (e) {}
-  }
-
-  document.getElementById('chatInput').focus();
-}
-
-
-/* Send chat message */
-async function sendChatMessage(){
-  const txt = (document.getElementById('chatInput').value || '').trim();
-  if(!txt) return;
-  if(!chatChannel || !chatName) return;
-  const ts = Date.now();
-  const payload = { user: chatName, text: txt, ts };
-  try{
-    await chatChannel.send({ type:'broadcast', event:'message', payload });
-    // do NOT append locally here — append happens when the broadcast comes back
-    document.getElementById('chatInput').value = '';
-  }catch(e){
-    console.error('send failed', e);
-  }
-}
-
-/* Append chat message to UI
-   options: { fromStorage: boolean } — if true, don't persist again (already in storage)
-*/
-// AUTO COLOR — gives each username a unique pastel color
-function hashColor(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 70%, 60%)`; 
-}
-
-function appendChatMessage(user, text, ts, options = { fromStorage:false }){
-  try{
-    const wrap = document.getElementById('messages');
-    // dedupe: check if message already present in DOM (by ts+user+text)
-    const selector = `.msg[data-ts="${ts}"][data-user="${CSS.escape(String(user))}"]`;
-    if(document.querySelector(selector)) return;
-
-    const el = document.createElement('div');
-    el.className = 'msg';
-// WhatsApp-style left/right alignment
-if (user === chatName) {
-  el.classList.add('msg-right');   // your message → right
-} else {
-  el.classList.add('msg-left');    // other messages → left
-}
-// AUTO COLOR SYSTEM
-function hashColor(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const hue = Math.abs(hash) % 360; 
-  return `hsl(${hue}, 65%, 35%)`;
-}
-
-// apply auto color
-
-
-
-    el.setAttribute('data-ts', ts);
-    el.setAttribute('data-user', user);
-
-    // meta row
-    const meta = document.createElement('div');
-    meta.className = 'message-meta';
-    const left = document.createElement('div');
-left.className = 'user-name';
-left.textContent = user;
-left.style.color = hashColor(user.toLowerCase());
-
-
-// auto-color username
-left.style.color = hashColor(user.toLowerCase());
-
-    const right = document.createElement('div');
-    try{
-      const d = new Date(Number(ts) || Date.now());
-      const hh = String(d.getHours()).padStart(2,'0');
-      const mm = String(d.getMinutes()).padStart(2,'0');
-      right.textContent = `${hh}:${mm}`;
-    }catch(e){ right.textContent = ''; }
-    meta.appendChild(left); meta.appendChild(right);
-
-    const body = document.createElement('div');
-    body.textContent = text;
-
-    el.appendChild(meta);
-    el.appendChild(body);
-    wrap.appendChild(el);
-    wrap.scrollTop = wrap.scrollHeight;
-
-    // persist if not fromStorage
-    if(!options.fromStorage && currentCode){
-      persistMessageForRoom(currentCode, { user, text, ts });
-    }
-
-    // schedule deletion (3 hours)
-    scheduleDeletionForMessage(currentCode, { user, text, ts });
-  }catch(e){
-    console.warn('appendChatMessage error', e);
-  }
-}
-
-/* Append system message like "Rahul vannu" */
-function appendSystem(text){
-  const wrap = document.getElementById('messages');
-  const el = document.createElement('div');
-  el.className = 'sys';
-  el.textContent = text;
-  wrap.appendChild(el);
-  wrap.scrollTop = wrap.scrollHeight;
-}
-
-/* Leave chat and cleanup */
-async function leaveChatRoom(){
-  if(chatChannel){
-    try{
-      // optional: broadcast leave
-      if(chatName){
-        try { await chatChannel.send({ type:'broadcast', event:'leave', payload:{ user:chatName, ts:Date.now() }}); } catch(e){}
-      }
-      await chatChannel.unsubscribe();
-    }catch(e){}
-  }
-  chatChannel = null;
-  chatName = '';
-  // clear scheduled deletions
-  for(const t of deletionTimers.values()){ clearTimeout(t); }
-  deletionTimers.clear();
-  // reset UI
-  document.getElementById('nameScreen').style.display = 'flex';
-  document.getElementById('chatContent').style.display = 'none';
-  document.getElementById('messages').innerHTML = '';
-  document.getElementById('nameInput').value = '';
-  document.getElementById('chatInput').value = '';
-}
-
-/* Schedule deletion of message after 3 hours
-   Also removes from localStorage for the room.
-*/
-function scheduleDeletionForMessage(code, msg){
-  try{
-    if(!msg || !msg.ts || !msg.user) return;
-    const key = `${msg.ts}_${msg.user}`;
-    if(deletionTimers.has(key)) return; // already scheduled
-
-    const tsNum = Number(msg.ts);
-    const now = Date.now();
-    const threeHours = 3 * 60 * 60 * 1000;
-    // compute delay — if message older than 3h, delete immediately
-    let delay = (tsNum + threeHours) - now;
-    if(delay <= 0) delay = 0;
-
-    const timer = setTimeout(() => {
-      // remove DOM nodes matching this message
-      const nodes = [...document.querySelectorAll(`.msg[data-ts="${msg.ts}"][data-user="${CSS.escape(String(msg.user))}"]`)];
-      nodes.forEach(n => n.remove());
-      // also remove from storage
-      removeMessageFromStorage(code, msg);
-      deletionTimers.delete(key);
-    }, delay);
-
-    deletionTimers.set(key, timer);
-  }catch(e){
-    console.warn('scheduleDeletionForMessage error', e);
-  }
-}
-
-/* ------------- Wire UI actions ------------- */
-document.addEventListener('click', (e) => {
-  // daddy is home click
-  if(e.target && e.target.id === 'daddySubmit') {
-    joinChatWithName();
-  }
+// Mobile menu control
+const menuBtn = document.getElementById('menuBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+menuBtn.addEventListener('click',()=>{
+  mobileMenu.style.display = mobileMenu.style.display==='flex'?'none':'flex';
 });
 
-document.getElementById('nameInput').addEventListener('keydown', (e)=>{
-  if(e.key === 'Enter') joinChatWithName();
+// Sticky cart show on scroll
+const stickyBar = document.getElementById('stickyBar');
+window.addEventListener('scroll',()=>{
+  if(window.scrollY > 400){stickyBar.style.display='flex';}
+  else{stickyBar.style.display='none';}
 });
 
-document.getElementById('sendBtn').addEventListener('click', sendChatMessage);
-document.getElementById('chatInput').addEventListener('keydown', (e)=>{
-  if(e.key === 'Enter' && !e.shiftKey){
-    e.preventDefault();
-    sendChatMessage();
-  }
-});
-
-/* make sure to cleanup when user leaves page */
-window.addEventListener('beforeunload', () => {
-  try { leaveChatRoom(); } catch(e){}
-});
-
-/* If user navigates back using back button, also cleanup */
-window.addEventListener('popstate', () => {
-  try { leaveChatRoom(); } catch(e){}
+// Sticky add to cart
+const stickyAdd = document.getElementById('stickyAdd');
+stickyAdd.addEventListener('click',()=>{
+  addBtn.click();
 });
 </script>
-
 </body>
 </html>
-
