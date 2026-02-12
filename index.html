@@ -377,6 +377,10 @@
               <button class="back-btn" onclick="goBack()">← Back</button>
             </div>
           </div>
+<div id="uploadStatus"
+     style="margin:10px 0;color:#FFD700;font-size:14px;">
+</div>
+
 
           <div id="codeLabel">Code: -</div>
 
@@ -556,12 +560,48 @@ async function listFiles(){
 function triggerUpload(){
   const picker = document.createElement('input');
   picker.type = 'file';
-  picker.onchange = async (e)=>{
-    const file = e.target.files[0];
+
+  picker.onchange = () => {
+    const file = picker.files[0];
+    if (!file) return;
+
+    const status = document.getElementById('uploadStatus');
+    status.textContent = 'Uploading… 0%';
+
     const path = `codes/${currentCode}/${file.name}`;
-    await supa.storage.from(BUCKET).upload(path, file, { upsert:true });
-    listFiles();
+    const url = `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`;
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
+
+    xhr.setRequestHeader(
+      'Authorization',
+      `Bearer ${SUPABASE_ANON}`
+    );
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const percent = Math.round((e.loaded / e.total) * 100);
+        status.textContent = `Uploading… ${percent}%`;
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status === 200 || xhr.status === 201) {
+        status.textContent = '✅ Upload complete';
+        listFiles();
+      } else {
+        status.textContent = '❌ Upload failed';
+      }
+    };
+
+    xhr.onerror = () => {
+      status.textContent = '❌ Upload error';
+    };
+
+    xhr.send(file);
   };
+
   picker.click();
 }
 
@@ -906,4 +946,5 @@ window.addEventListener('popstate', () => {
 
 </body>
 </html>
+
 
